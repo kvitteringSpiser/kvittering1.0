@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/helvetica-neue/9.0.1/helvetica-neue.min.css');
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            padding: 20mm;
+            box-sizing: border-box;
+            background: white;
+            color: black;
+            line-height: 1.3;
+            position: relative;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-reset {
+            background: #f0f0f0;
+        }
+
+        .btn-export {
+            background: #007bff;
+            color: white;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            right: 0;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        [contenteditable="true"]:hover {
+            background: #f8f9fa;
+            outline: 1px dashed #ccc;
+            padding: 2px;
+        }
+        
+        [contenteditable="true"]:focus {
+            background: #fff;
+            outline: 2px solid #007bff;
+            padding: 2px;
+        }
+        
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .left-info, .right-info {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        
+        th {
+            background-color: #fff;
+            font-weight: normal;
+        }
+        
+        tr.highlight {
+            background-color: #ffffd0;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 20mm;
+            left: 20mm;
+            right: 20mm;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+
+        @media print {
+            .controls {
+                display: none;
+            }
+            body {
+                width: 210mm;
+                height: 297mm;
+            }
+            [contenteditable="true"]:hover {
+                background: none;
+                outline: none;
+                padding: 0;
+            }
+            [contenteditable="true"]:focus {
+                background: none;
+                outline: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="btn btn-reset" onclick="resetFields()">Nullstill</button>
+        <div class="dropdown">
+            <button class="btn btn-export">Eksporter</button>
+            <div class="dropdown-content">
+                <a href="#" onclick="exportPDF()">Som PDF</a>
+                <a href="#" onclick="exportPNG()">Som PNG</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="title" contenteditable="true" id="legesenterNavn">
+        Holt Vestvollen Legesenter
+    </div>
+
+    <div class="info-grid">
+        <div class="left-info">
+            <div contenteditable="true" id="pasientNavn">Omar Hadi</div>
+            <div contenteditable="true" id="fodselsnummer">180407 92984</div><br>
+            <strong>Konsultasjonstid:</strong><br>
+            <div contenteditable="true" id="konsultasjonsTid">07.11.2024 kl. 12:20</div>
+        </div>
+        <div class="right-info">
+            <div contenteditable="true" id="adresse">Prost Stabels vei 6</div>
+            <div contenteditable="true" id="poststed">2019 Skedsmokorset</div>
+            <div contenteditable="true" id="telefon">Tlf: 64 83 66 90</div>
+            <div contenteditable="true" id="epost">E-post: info@hvlegesenter.no</div><br>
+            Dato: <span contenteditable="true" id="dato">07.11.2024</span><br>
+            Kvittering nr: <span contenteditable="true" id="kvitteringNr">2024/1107-01</span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Beskrivelse</th>
+                <th style="width: 100px;">Takst</th>
+                <th style="width: 120px;">Beløp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td contenteditable="true" id="beskrivelse">Legekonsultasjon (Dr. Goretti Pham)</td>
+                <td contenteditable="true" id="takst">2ad</td>
+                <td contenteditable="true" id="belop">kr 239,-</td>
+            </tr>
+            <tr class="highlight">
+                <td colspan="2"><strong>Sum å betale:</strong></td>
+                <td><strong contenteditable="true" id="totalBelop">kr 239,-</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; font-size: 14px;">
+        Betalingsmåte: <span contenteditable="true" id="betalingsmate">eFaktura</span><br>
+        Behandler: <span contenteditable="true" id="behandler">Dr. Goretti Pham</span>
+    </div>
+
+    <div class="footer">
+        <div>Dato: <span contenteditable="true" id="dokumentDato">07.11.2024 kl. 13:23</span></div>
+        <div>Side 1/1</div>
+    </div>
+
+    <div style="position: absolute; bottom: 35mm; left: 20mm; right: 20mm; font-size: 12px; color: #666;">
+        <div contenteditable="true" id="footerText">
+            Denne kvitteringen gjelder som dokumentasjon for skattefradrag og egenandelstak.<br>
+            Egenandelen er omfattet av frikortordningen.
+        </div>
+    </div>
+
+    <script>
+        const defaultValues = {
+            legesenterNavn: '[Legesenter navn]',
+            pasientNavn: '[Pasientnavn]',
+            fodselsnummer: '[Fødselsnummer]',
+            konsultasjonsTid: '[Konsultasjonstid]',
+            adresse: '[Gateadresse]',
+            poststed: '[Postnummer Sted]',
+            telefon: '[Telefon]',
+            epost: '[E-post]',
+            dato: '[Dato]',
+            kvitteringNr: '[Kvitteringsnummer]',
+            beskrivelse: '[Beskrivelse]',
+            takst: '[Takst]',
+            belop: '[Beløp]',
+            totalBelop: '[Sum]',
+            betalingsmate: '[Betalingsmåte]',
+            behandler: '[Behandler]',
+            dokumentDato: '[Dokumentdato]',
+            footerText: '[Fotnote]'
+        };
+
+        function resetFields() {
+            for (const [id, value] of Object.entries(defaultValues)) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                }
+            }
+        }
+
+        function exportPDF() {
+            window.print();
+        }
+
+        async function exportPNG() {
+            const element = document.body;
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                windowWidth: element.scrollWidth,
+                windowHeight: element.scrollHeight
+            });
+            
+            const link = document.createElement('a');
+            link.download = 'kvittering.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Oppdater totalbeløp når beløp endres
+        document.getElementById('belop').addEventListener('input', function() {
+            document.getElementById('totalBelop').textContent = this.textContent;
+        });
+    </script>
+</body>
+</html>
